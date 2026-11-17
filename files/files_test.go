@@ -11,7 +11,7 @@ import (
 )
 
 func TestSendAndGetFile(t *testing.T) {
-	fileBytes, err := os.ReadFile("F:/GolangProjects/BubleMessenger/client/192.webp")
+	fileBytes, err := os.ReadFile("F:/GolangProjects/BubbleMessenger/client/192.webp")
 	require.NoError(t, err)
 
 	t.Run("success", func(t *testing.T) {
@@ -32,8 +32,11 @@ func TestSendAndGetFile(t *testing.T) {
 		require.Equal(t, textMessageSplitted[1], fileName)
 		fileStoragePath := textMessageSplitted[2]
 
+		delMessages := messages.DelMessages(receiverLogin, receiverPassword, receiverDevice, receiverKey)
+		require.Equal(t, "Успешно удалено", delMessages)
+
 		gettedFile := GetFile(receiverLogin, receiverPassword, fileStoragePath, receiverDevice, receiverKey)
-		require.Equal(t, gettedFile, fileBytes)
+		require.Equal(t, fileBytes, gettedFile)
 
 		del := DelFile(receiverLogin, receiverPassword, fileStoragePath, receiverDevice, receiverKey)
 		require.Equal(t, del, "Успешно удалено")

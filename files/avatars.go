@@ -1,10 +1,12 @@
 package files
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"client/config"
@@ -38,14 +40,47 @@ func SetAvatar(login, password, deviceInfo, key string, avatar []byte) string {
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "$ Не удалось прочитать ответ от сервера"
-	}
-
 	switch resp.StatusCode {
 	case http.StatusOK:
-		return "Аватар усшпено загружен"
+		scanner := bufio.NewScanner(resp.Body)
+
+		for scanner.Scan() {
+			msg := scanner.Text()
+
+			switch {
+			case strings.Contains(msg, "Error"):
+				return "$ " + msg
+
+			case msg == "Success":
+				return "Успешно отправлен"
+
+			default:
+				postReqBody := FilesRequest{
+					File:          avatar,
+					ReceiverLogin: "",
+				}
+
+				body, err := json.Marshal(&postReqBody)
+				if err != nil {
+					return "$ не удалось создать запрос для загрузки файла"
+				}
+
+				resp, err := http.Post(config.FilesService+msg, "", bytes.NewReader(body))
+				if err != nil {
+					return "$ не удалось отправить реквест на загрузку файла"
+				}
+				defer resp.Body.Close()
+
+				body, _ = io.ReadAll(resp.Body)
+				if resp.StatusCode != http.StatusOK {
+					return "Ошибка при отправке файла"
+				}
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return "$ ошибка чтения ответа: " + err.Error()
+		}
 	case http.StatusBadRequest:
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -56,11 +91,12 @@ func SetAvatar(login, password, deviceInfo, key string, avatar []byte) string {
 	case http.StatusForbidden:
 		return "$ Не правильный логин или пароль"
 	case http.StatusInternalServerError:
-		resp, _ := crypto.StringDecrypt(string(body), key)
-		return "$ Внутренняя ошибка сервера" + resp
+		return "$ Внутренняя ошибка сервера"
 	default:
 		return "$ Неизвестная ошибка"
 	}
+
+	return "$ Произошла неизвестная ошибка"
 }
 
 func GetAvatar(login, password, loginForSearch, deviceInfo, key string) []byte {
@@ -86,26 +122,10 @@ func GetAvatar(login, password, loginForSearch, deviceInfo, key string) []byte {
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		// var encAvatar []byte
-		// if err := json.Unmarshal(respBody, &encAvatar); err != nil {
-		// 	// Если не получилось, возможно сервер вернул JSON-строку или plain string с зашифрованными байтами
-		// 	var s string
-		// 	if err2 := json.Unmarshal(respBody, &s); err2 == nil {
-		// 		encAvatar = []byte(s)
-		// 	} else {
-		// 		// как запасной вариант — попробовать использовать сырое тело без JSON
-		// 		encAvatar = respBody
-		// 	}
-		// }
-
-		// Расшифровываем полученные байты
 		storagePath, err := crypto.StringDecrypt(string(body), key)
 		if err != nil {
-			fmt.Println("decrypt avatar:", err)
-			return nil
+			return []byte{}
 		}
-
-		fmt.Println(storagePath)
 
 		client := &http.Client{
 			Timeout: 10 * time.Second,

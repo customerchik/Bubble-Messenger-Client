@@ -8,7 +8,7 @@ import (
 )
 
 func TestSetAndGetAvatar(t *testing.T) {
-	avatarBytes, err := os.ReadFile("F:/GolangProjects/BubleMessenger/client/192.webp")
+	avatarBytes, err := os.ReadFile("F:/GolangProjects/BubbleMessenger/client/192.webp")
 	require.NoError(t, err)
 
 	t.Run("success", func(t *testing.T) {
@@ -19,7 +19,7 @@ func TestSetAndGetAvatar(t *testing.T) {
 		require.NotContains(t, setAvatar, "$")
 
 		gettedAvatar := GetAvatar(login, password, login, device, key)
-		require.Equal(t, gettedAvatar, avatarBytes)
+		require.Equal(t, avatarBytes, gettedAvatar)
 	})
 
 	t.Run("not exist user login", func(t *testing.T) {
