@@ -16,7 +16,6 @@ import (
 type SendFileRequest struct {
 	Receiver string
 	FileName string
-	File     []byte
 }
 
 type GetFileRequest struct {
@@ -36,7 +35,6 @@ func SendFile(login, password, receiverLogin, fileName, deviceInfo, key string, 
 	req := SendFileRequest{
 		Receiver: receiverLogin,
 		FileName: fileName,
-		File:     file,
 	}
 
 	reqBody, err := json.Marshal(req)

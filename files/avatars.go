@@ -14,27 +14,12 @@ import (
 	"client/request"
 )
 
-type SetAvatarRequest struct {
-	Avatar []byte `json:"avatar"`
-	Login  string `json:"login"`
-}
-
 type GetAvatarRequest struct {
 	LoginForSearch string
 }
 
 func SetAvatar(login, password, deviceInfo, key string, avatar []byte) string {
-	req := SetAvatarRequest{
-		Avatar: avatar,
-		Login:  login,
-	}
-
-	reqBody, err := json.Marshal(req)
-	if err != nil {
-		return "$ не удалось преобразовать запрос в JSON" + err.Error()
-	}
-
-	resp, err := request.SendRequest(login, password, deviceInfo, key, config.ForServerReq+config.MediumSizeDataServicePort+"/", "setavatar", reqBody)
+	resp, err := request.SendRequest(login, password, deviceInfo, key, config.ForServerReq+config.MediumSizeDataServicePort+"/", "setavatar", nil)
 	if err != nil {
 		return "$ не удалось отправить реквест " + err.Error()
 	}
