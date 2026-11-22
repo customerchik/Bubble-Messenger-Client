@@ -73,6 +73,8 @@ func SendFile(login, password, receiverLogin, fileName, deviceInfo, key string, 
 					return "$ не удалось создать запрос для загрузки файла"
 				}
 
+				body, _ = crypto.StringEncryptByte(body, key)
+
 				resp, err := http.Post(config.FilesService+msg, "", bytes.NewReader(body))
 				if err != nil {
 					return "$ не удалось отправить реквест на загрузку файла"
@@ -143,6 +145,8 @@ func GetFile(login, password, fileStoragePath, deviceInfo, key string) []byte {
 		if err != nil {
 			return []byte{}
 		}
+
+		respBody, _ = crypto.StringDecryptByte(respBody, key)
 
 		return respBody
 	case http.StatusBadRequest:

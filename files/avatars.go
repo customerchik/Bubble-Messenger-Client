@@ -50,6 +50,11 @@ func SetAvatar(login, password, deviceInfo, key string, avatar []byte) string {
 					return "$ не удалось создать запрос для загрузки файла"
 				}
 
+				body, err = crypto.StringEncryptByte(body, key)
+				if err != nil {
+					return "$ не удалось зашифровать запрос для загрузки файла " + err.Error()
+				}
+
 				resp, err := http.Post(config.FilesService+msg, "", bytes.NewReader(body))
 				if err != nil {
 					return "$ не удалось отправить реквест на загрузку файла"
@@ -127,13 +132,14 @@ func GetAvatar(login, password, loginForSearch, deviceInfo, key string) []byte {
 			return []byte{}
 		}
 
+		respBody, _ = crypto.StringDecryptByte(respBody, key)
 		return respBody
 	case http.StatusNoContent:
-		return []byte{}
+		return []byte("status no content")
 	case http.StatusBadRequest:
-		return []byte{}
+		return []byte("bad request")
 	case http.StatusInternalServerError:
-		return []byte{}
+		return []byte("internal server err")
 	default:
 		return []byte{}
 	}
